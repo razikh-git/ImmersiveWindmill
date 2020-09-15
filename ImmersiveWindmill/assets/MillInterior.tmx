@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.2" tiledversion="2020.01.22" orientation="orthogonal" renderorder="right-down" compressionlevel="-1" width="14" height="70" tilewidth="16" tileheight="16" infinite="0" nextlayerid="13" nextobjectid="79">
+<map version="1.2" tiledversion="2020.01.22" orientation="orthogonal" renderorder="right-down" compressionlevel="-1" width="14" height="70" tilewidth="16" tileheight="16" infinite="0" nextlayerid="13" nextobjectid="77">
  <properties>
   <property name="AmbientLight" value="60 60 65"/>
   <property name="Light" value="3 3 4 10 3 4 2 33 4 11 33 4 3 59 4 10 59 4"/>
@@ -432,16 +432,6 @@
   <properties>
    <property name="Warp" value="0 0 Farm -1 -1"/>
   </properties>
-  <object id="77" name="TileData" x="96" y="1088" width="16" height="16">
-   <properties>
-    <property name="Action" value="ExitBuildable"/>
-   </properties>
-  </object>
-  <object id="78" name="TileData" x="112" y="1088" width="16" height="16">
-   <properties>
-    <property name="Action" value="ExitBuildable"/>
-   </properties>
-  </object>
  </objectgroup>
  <layer id="3" name="Buildings" width="14" height="70">
   <data encoding="base64" compression="zlib">

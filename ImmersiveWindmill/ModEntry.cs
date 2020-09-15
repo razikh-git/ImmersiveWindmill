@@ -1,6 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using xTile;
 using xTile.Dimensions;
 
@@ -8,6 +13,10 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Buildings;
+using StardewValley.Menus;
+using StardewValley.Objects;
+
+using TMXLoader;
 
 namespace ImmersiveWindmill
 {
@@ -18,7 +27,10 @@ namespace ImmersiveWindmill
 		internal ITranslationHelper i18n => Helper.Translation;
 
 		private const string CmdPrefix = "mill";
+		internal const string TmxBuildablePrefix = "BuildableIndoors-";
 		internal const string AssetPrefix = "blueberry.ImmersiveWindmill.";
+		internal static readonly string MillInteriorMapFile = "MillInterior";
+
 		private const string ActionLadder = AssetPrefix + "MillLadder";
 		private const string ActionGreatWheel = AssetPrefix + "MillGreatWheel";
 		private const string ActionHopper = AssetPrefix + "MillHopper";
@@ -28,11 +40,10 @@ namespace ImmersiveWindmill
 		private const string ActionFlourBin = AssetPrefix + "MillFlourBin";
 		private const string InspectAction = "InspectAction";
 
-		internal static readonly string MillInteriorMapName = AssetPrefix + "MillInterior";
+		internal static readonly Point MillEntryOffset = new Point(1, 1);
+		internal static readonly string MillBuildableId = AssetPrefix + "MillBuildable";
 		internal const int RoomHeight = 14;
 		internal static int RoomSpacing = 28;
-
-		internal static Vector2 LastMillUsed;
 
 		public override void Entry(IModHelper helper)
 		{
@@ -42,26 +53,30 @@ namespace ImmersiveWindmill
 
 			Helper.Events.GameLoop.SaveLoaded += GameLoopOnSaveLoaded;
 			Helper.Events.Input.ButtonPressed += InputOnButtonPressed;
+			Helper.Events.Display.MenuChanged += DisplayOnMenuChanged;
 			if (Config.DebugMode)
 				Helper.ConsoleCommands.Add(
 					$"{CmdPrefix}warp",
 					"Warp outside a mill on the farm, or inside the MillInterior location if no mills are found.",
 					(s, args) =>
 					{
-						var warp = ((string)Game1.getLocationFromName(MillInteriorMapName).Map
+						var mill = GetMillsForFarm().FirstOrDefault();
+						var buildables = (IList<SaveBuildable>) GetTmxlBuildablesBuilt().GetValue(null);
+						var millIndoors = buildables.FirstOrDefault(b =>
+							b.Position[0] == mill.tileX.Value && b.Position[1] == mill.tileY.Value);
+						var warp = ((string)Game1.getLocationFromName(millIndoors.Indoors.Name).Map
 							.Properties["Warp"]).Split(' ');
-						var mill = (Mill) Game1.getFarm().buildings.FirstOrDefault(b => b is Mill);
 						Game1.player.warpFarmer(new Warp(Game1.player.getTileX(), Game1.player.getTileY(),
-							mill == null ? MillInteriorMapName : Game1.getFarm().Name,
-							mill == null ? int.Parse(warp[0]) : mill.tileX.Value + 1,
-							mill == null ? int.Parse(warp[1]) - 1 : mill.tileY.Value + 2,
+							millIndoors.Location,
+							mill.tileX.Value + 1,
+							mill.tileY.Value + 2,
 							false));
 					});
 		}
 
 		private void GameLoopOnSaveLoaded(object sender, SaveLoadedEventArgs e)
 		{
-			PopulateMillsWithInteriors(Config.CheckAllLocationsForMills);
+			//asdf();
 		}
 
 		private void InputOnButtonPressed(object sender, ButtonPressedEventArgs e)
@@ -71,8 +86,15 @@ namespace ImmersiveWindmill
 			    || Game1.nameSelectUp || Game1.IsChatting || Game1.dialogueTyping || Game1.dialogueUp // No text inputs
 			    || Game1.player.UsingTool || Game1.pickingTool || Game1.numberOfSelectedItems != -1 // No tools in use
 			    || Game1.fadeToBlack
-			    || !Game1.player.CanMove
-			    || !e.Button.IsActionButton())
+			    || !Game1.player.CanMove)
+				return;
+
+			// TODO: DEBUG: Remove debug hotkey
+			if (e.Button == SButton.F8)
+				asdf();
+
+			// Actions:
+			if (!e.Button.IsActionButton())
 				return;
 
 			// Use tile actions in maps
@@ -82,20 +104,29 @@ namespace ImmersiveWindmill
 			var position = e.Cursor.GrabTile;
 			if (!Config.MillsHaveInteriors
 			    || !(Game1.currentLocation is Farm farm)
-			    || !(farm.getBuildingAt(position) is Mill mill)
+			    || !(farm.getBuildingAt(position) is Mill mill) 
 			    || mill.daysOfConstructionLeft.Value > 0
 				//|| mill.output.Value.items.Any()
 			)
 				return;
 
-			LastMillUsed = new Vector2(mill.tileX.Value, mill.tileY.Value);
-			UpdateMillInteriorWarpOutLocation(new Location(Game1.player.getTileX(), Game1.player.getTileY()));
-			var warp = ((string)Game1.getLocationFromName(MillInteriorMapName).Map
-					.Properties["Warp"]).Split(' ');
+			var buildable = ((IList<SaveBuildable>) GetTmxlBuildablesBuilt().GetValue(null))
+				.FirstOrDefault(tmxb => tmxb.Position[0] == mill.tileX.Value && tmxb.Position[1] == mill.tileY.Value);
+			if (buildable == null)
+			{
+				Log.E("Failed to find a suitable mill buildable/interior for mill at"
+				      + $" (X:{mill.tileX.Value}, Y:{mill.tileY.Value}).");
+				return;
+			}
+
+			var millIndoors = Game1.getLocationFromName(buildable.Indoors.Name);
+			UpdateMillInteriorWarpOutLocation(new Location(Game1.player.getTileX(), Game1.player.getTileY()),
+				millIndoors.Map);
+			var warp = ((string)millIndoors.Map.Properties["Warp"]).Split(' ');
 
 			if (warp.Length == 0)
 			{
-				Log.E($"Failed to patch in warp properties for {MillInteriorMapName} in setup:"
+				Log.E($"Failed to patch in warp properties for {buildable.Indoors.Name} in setup:"
 				      + $"\nWarp: {(warp.Length <= 0 ? "null" : warp.Aggregate((a,b) => $"{a} {b}"))}");
 			}
 			else
@@ -103,16 +134,160 @@ namespace ImmersiveWindmill
 				Log.W($"\nWarp: {(warp.Length <= 0 ? "null" : warp.Aggregate((a,b) => $"{a} {b}"))}");
 				var targetPosition = new Location(int.Parse(warp[0]), int.Parse(warp[1]));
 				Game1.player.warpFarmer(new Warp(Game1.player.getTileX(), Game1.player.getTileY(),
-					MillInteriorMapName, targetPosition.X, targetPosition.Y - 1, false));
+					buildable.Indoors.Name, targetPosition.X, targetPosition.Y - 1, false));
 				Helper.Input.Suppress(e.Button);
 			}
 		}
 		
-		private void PopulateMillsWithInteriors(bool isAppliedWorldWide)
+		private void DisplayOnMenuChanged(object sender, MenuChangedEventArgs e)
 		{
-			
+			// Update positions of all mill interior entry 'fake' buildables when using Robin's blueprints menu
+			if (e.NewMenu is BlueprintsMenu || e.OldMenu is BlueprintsMenu)
+				asdf();
 		}
 
+		public static List<Mill> GetMillsForFarm()
+		{
+			return Game1.getFarm().buildings.OfType<Mill>().ToList();
+		}
+
+		public static Type GetTmx()
+		{
+			var tmx = Type.GetType("TMXLoader.TMXLoaderMod, TMXLoader");
+			if (tmx != null)
+			{
+				return tmx;
+			}
+			
+			Log.E("Unable to save mill interior data: TMXLoader not found, or ImmersiveWindmill out of date."
+			      + "\nAll objects placed within mills will be lost upon saving.");
+			return null;
+		}
+
+		public static FieldInfo GetTmxlBuildablesDefined()
+		{
+			return GetTmx().GetField("buildables", 
+					BindingFlags.Public | BindingFlags.Static);
+		}
+
+		public static FieldInfo GetTmxlBuildablesBuilt()
+		{
+			return GetTmx().GetField("buildablesBuild", 
+					BindingFlags.NonPublic | BindingFlags.Static);
+
+		}
+
+		public static FieldInfo GetTmxlBuildableExits()
+		{
+			return GetTmx().GetField("buildablesExits", 
+					BindingFlags.NonPublic | BindingFlags.Static);
+		}
+
+		public SaveBuildable GetNewMillBuildable(Point position)
+		{
+			var uniqueId = ((ulong)Helper.Multiplayer.GetNewID()).ToString();
+			return new SaveBuildable(
+				MillBuildableId,
+				"Farm",
+				position,
+				uniqueId,
+				Game1.player.Name,
+				Game1.player.UniqueMultiplayerID,
+				new Dictionary<string, string>())
+			{
+				Indoors = new SaveLocation(TmxBuildablePrefix + uniqueId, "")
+			};
+		}
+
+		private void asdf()
+		{
+			if (GetTmx() == null)
+				return;
+
+			Log.W("Updating TMXL buildables list");
+			Log.D($"Current mills: {GetMillsForFarm().Count}");
+			var tmxBuildablesBuiltField = GetTmxlBuildablesBuilt();
+			var tmxBuildablesBuilt = (IList<SaveBuildable>) tmxBuildablesBuiltField.GetValue(null);
+			var tmxBuildableExitsField = GetTmxlBuildableExits();
+			var tmxBuildableExits = (IDictionary<string, Warp>) tmxBuildableExitsField.GetValue(null);
+			var tmxBuildablesDefinedField = GetTmxlBuildablesDefined();
+			var tmxBuildablesDefined = (IList<BuildableEdit>) GetTmxlBuildablesDefined().GetValue(null);
+			var buildableDefinition = tmxBuildablesDefined.FirstOrDefault(b => b.id == MillBuildableId);
+			if (buildableDefinition == null)
+			{
+				// Add buildable definition
+				var iconPath = Path.Combine("assets", "icon.png");
+				tmxBuildablesDefined.Add(new BuildableEdit(
+					MillBuildableId,
+					Path.Combine("assets", MillInteriorMapFile),
+					iconPath,
+					-1,
+					Helper.Content.Load<Texture2D>(iconPath),
+					MillInteriorMapFile,
+					Game1.getFarm().Name,
+					null));
+				tmxBuildablesDefinedField.SetValue(null, tmxBuildablesDefined);
+			}
+
+			Log.W("Old TMXL Buildables:");
+			var msg = tmxBuildablesBuilt.Aggregate(
+				$"Count: {tmxBuildablesBuilt.Count}",
+				(current, buildable) => current + $"\n{buildable.Id} : {buildable.UniqueId}");
+			Log.D(msg);
+
+			var mills = GetMillsForFarm().ToDictionary(mill => mill, mill => false);
+			for (var i = tmxBuildablesBuilt.Count - 1; i > -1; --i)
+			{
+				var buildable = tmxBuildablesBuilt[i];
+
+				Log.D($"Checking buildable {buildable.Id} : {buildable.UniqueId}"
+				      + $" at (X:{buildable.Position[0]}, Y:{buildable.Position[1]})");
+
+				if (buildable.Id != MillBuildableId)
+					// Ignore buildables other than our 'fake' buildables
+					continue;
+
+				var mill = mills.FirstOrDefault(pair => // Check whether buildable matches position of any mill on the farm
+					pair.Key.tileX.Value == buildable.Position[0]
+					&& pair.Key.tileY.Value == buildable.Position[1]).Key;
+
+				if (mill != null) // Mill matching this buildable exists on the farm, mark this one as OK
+				{
+					Log.D($"Confirmed buildable for mill at (X:{mill.tileX.Value}, Y:{mill.tileY.Value})");
+					mills[mill] = true;
+				}
+				else // There are no mills on the farm that match the buildable, remove the buildable entry
+				{
+					Log.D($"Removing buildable for mill at (X:{buildable.Position[0]}, Y:{buildable.Position[1]})");
+					tmxBuildablesBuilt.RemoveAt(i);
+					tmxBuildableExits.Remove(buildable.Indoors.Name);
+				}
+			}
+
+			// Update TMXL buildables lists to match new mill positions
+			// Updating buildable exits should give us our exit warps back to the farm
+			foreach (var pair in mills.Where(pair => !pair.Value))
+			{
+				Log.D($"Adding buildable for mill at (X:{pair.Key.tileX.Value}, Y:{pair.Key.tileY.Value})");
+				var buildable = GetNewMillBuildable(new Point(pair.Key.tileX.Value, pair.Key.tileY.Value));
+				tmxBuildablesBuilt.Add(buildable);
+				tmxBuildableExits.Add(buildable.Indoors.Name,
+					new Warp(0, 0, 
+						buildable.Location,
+						buildable.Position[0], buildable.Position[1], false));
+			}
+
+			// Apply our changes to TMXL's fields
+			tmxBuildablesBuiltField.SetValue(null, tmxBuildablesBuilt);
+			tmxBuildableExitsField.SetValue(null, tmxBuildableExits);
+
+			Log.W("New TMXL Buildables:");
+			msg = tmxBuildablesBuilt.Aggregate(
+				$"Count: {tmxBuildablesBuilt.Count}",
+				(current, buildable) => current + $"\n{buildable.Id} : {buildable.UniqueId}");
+			Log.D(msg);
+		}
+		
 		public void CheckTileAction(Vector2 position, GameLocation location, string[] forceAction = null)
 		{
 			var property = location.doesTileHaveProperty(
@@ -120,7 +295,7 @@ namespace ImmersiveWindmill
 			if (property == null && forceAction == null)
 				return;
 			var action = property?.Split(' ') ?? forceAction;
-			var millInterior = Game1.currentLocation.Name == MillInteriorMapName ? (MillInterior) Game1.currentLocation : null;
+			var millInterior = Game1.currentLocation is MillInterior ? (MillInterior) Game1.currentLocation : null;
 			switch (action[0])
 			{
 				case ActionHopper:
@@ -243,10 +418,8 @@ namespace ImmersiveWindmill
 			Helper.Input.Suppress(e.Button);
 		}
 
-		internal static void UpdateMillInteriorWarpOutLocation(Location enterFrom, Map map = null)
+		internal static void UpdateMillInteriorWarpOutLocation(Location enterFrom, Map map)
 		{
-			map ??= Game1.getLocationFromName(MillInteriorMapName).Map;
-
 			RoomSpacing = (map.DisplayHeight / 64 - RoomHeight * 3);
 
 			var warp = map.Properties["Warp"].ToString().Split(' ').ToList();
@@ -262,7 +435,7 @@ namespace ImmersiveWindmill
 			warp = warp.Concat(new[] {(int.Parse(warp[0]) + 1).ToString(), warp[1], warp[2], warp[3], warp[4]}).ToList();
 			map.Properties["Warp"] = warp.Aggregate("", (s, s1) => $"{s} {s1}").Remove(0, 1);
 
-			Log.D($"Updated {MillInteriorMapName} warps:"
+			Log.D("Updated mill interior warps:"
 			      + $"\nFrom {oldWarp.Aggregate("", (s, s1) => $"{s} {s1}")}"
 			      + $"\nTo {warp.Aggregate("", (s, s1) => $"{s} {s1}")}"
 			      + $"\nMap spacing: {RoomSpacing}, Map Height: {RoomHeight}");
@@ -291,7 +464,7 @@ namespace ImmersiveWindmill
 			// Try to add items to the hopper if there's available room
 			var currentMillInput = (StardewValley.Object) Utility.addItemToThisInventoryList(
 				who.ActiveObject,
-				((MillInterior)Game1.currentLocation).MillHopperInputs[mill.nameOfIndoors].items,
+				((Chest)((MillInterior)Game1.currentLocation).objects[MillInterior.HopperPosition]).items,
 				36);
 			who.ActiveObject = null;
 			if (currentMillInput != null)

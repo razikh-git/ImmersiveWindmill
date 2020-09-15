@@ -338,3 +338,6 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+/ImmersiveWindmill/assets/townInterior.png
+/ImmersiveWindmill/assets/walls_and_floors.png
+/ImmersiveWindmill/assets/coopTiles.png

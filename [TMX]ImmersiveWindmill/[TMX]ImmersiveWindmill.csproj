@@ -11,9 +11,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="assets\MillInterior.tmx">
+    <Content Include="assets\*.tmx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="assets\*.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="assets\*.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Remove="assets\coopTiles.png" />
+    <Content Remove="assets\townInterior.png" />
+    <Content Remove="assets\walls_and_floors.png" />
+    <None Remove="assets\coopTiles.png" />
+    <None Remove="assets\townInterior.png" />
+    <None Remove="assets\walls_and_floors.png" />
     <Content Include="content.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

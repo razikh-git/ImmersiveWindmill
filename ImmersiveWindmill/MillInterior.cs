@@ -8,24 +8,23 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Buildings;
-
-using Netcode;
-using StardewValley.Network;
 using StardewValley.Objects;
+using TMXLoader;
 
 namespace ImmersiveWindmill
 {
 	public class MillInterior : GameLocation
 	{
 		public Mill Mill;
-		public NetStringDictionary<Chest, NetRef<Chest>> MillHopperInputs = new NetStringDictionary<Chest, NetRef<Chest>>();
+		//public NetRef<Chest> HopperInput = new NetRef<Chest>();
+		internal static readonly Vector2 HopperPosition = Vector2.Zero;
 
 		public MillInterior() {}
 
 		public MillInterior(string map, string name)
 			: base(map, name)
 		{
-			NetFields.AddFields(MillHopperInputs);
+			//NetFields.AddFields(HopperInput);
 		}
 
 		public override void UpdateWhenCurrentLocation(GameTime time)
@@ -35,23 +34,40 @@ namespace ImmersiveWindmill
 
 		public override void hostSetup()
 		{
-			Mill ??= (Mill) ((Farm) Game1.getLocationFromName("Farm")).getBuildingAt(ModEntry.LastMillUsed);
-			Mill ??= ((Farm) Game1.getLocationFromName("Farm")).buildings.OfType<Mill>().FirstOrDefault();
+			var buildables = (IList<SaveBuildable>) ModEntry.GetTmxlBuildablesBuilt().GetValue(null);
+			foreach (var tmxb in buildables)
+			{
+				if (Game1.getFarm().buildings.Any(b =>
+					tmxb.Position[0] != b.tileX.Value
+					|| tmxb.Position[1] != b.tileY.Value))
+					continue;
+
+				Mill ??= (Mill) Game1.getFarm().getBuildingAt(
+					new Vector2(tmxb.Position[0], tmxb.Position[1]));
+				break;
+			}
+
+			Mill ??= ModEntry.GetMillsForFarm().FirstOrDefault();
 			if (Mill == null)
 				Log.D($"Warped to {Name}: No mill was found on the farm.",
 					ModEntry.Instance.Config.DebugMode);
 			Mill ??= new Mill();
+
 			ModEntry.Instance.Helper.Events.GameLoop.UpdateTicked += GameLoopOnUpdateTicked;
 
+			// Set up the hopper
+			if (objects.ContainsKey(HopperPosition))
+				objects[HopperPosition] ??= new Chest(true, HopperPosition);
+			else
+				objects.Add(HopperPosition, new Chest(true, HopperPosition));
+
 			// Set contextual map tiles:
-			MillHopperInputs[Mill.nameOfIndoors] ??= new Chest();
 
 			// Hopper has items waiting to be milled
-			if (!MillHopperInputs[Mill.nameOfIndoors].items.Any())
+			if (!((Chest)objects[HopperPosition]).items.Any())
 				for (var x = 5; x < 7; ++x)
 				for (var y = 5; y < 7; ++y)
-					Game1.currentLocation.Map.GetLayer("AboveBuildings")
-						.Tiles[x, y].TileIndex = 1;
+					Map.GetLayer("AboveBuildings").Tiles[x, y].TileIndex = 1;
 
 			// Mill building is currently milling items
 			if (Mill != null && Mill.input.Value.items.Any())
@@ -68,8 +84,7 @@ namespace ImmersiveWindmill
 			foreach (var tiles in contextualTiles)
 				for (var x = tiles.Key.X; x < tiles.Key.X + tiles.Key.Width; ++x)
 				for (var y = tiles.Key.Y; y < tiles.Key.Y + tiles.Key.Height; ++y)
-					Game1.currentLocation.Map.GetLayer(tiles.Value)
-						.Tiles[x, y].TileIndex = 1;
+					Map.GetLayer(tiles.Value).Tiles[x, y].TileIndex = 1;
 		}
 		
 		public override void cleanupBeforePlayerExit()
@@ -80,6 +95,7 @@ namespace ImmersiveWindmill
 
 		private void GameLoopOnUpdateTicked(object sender, UpdateTickedEventArgs e)
 		{
+			// Play ambient sounds
 			if (!ModEntry.Instance.Config.MillsMakeSounds || !e.IsMultipleOf(145) || !Game1.game1.IsActive || Game1.fadeIn)
 				return;
 
