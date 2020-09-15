@@ -1,0 +1,9 @@
+{
+	"addMaps": [
+		{
+			"name": "blueberry.ImmersiveWindmill.MillInterior",
+			"file": "assets/MillInterior.tmx",
+			"type": "Custom:ImmersiveWindmill.MillInterior, ImmersiveWindmill, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+		}
+	]
+}

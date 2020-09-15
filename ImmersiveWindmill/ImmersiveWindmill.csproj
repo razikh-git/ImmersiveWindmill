@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>ImmersiveWindmill</AssemblyName>
+    <RootNamespace>ImmersiveWindmill</RootNamespace>
+    <Version>1.0.0</Version>
+    <TargetFramework>net452</TargetFramework>
+    <Platforms>x86</Platforms>
+    <PlatformTarget>x86</PlatformTarget>
+    <EnableHarmony>true</EnableHarmony>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="3.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="PyTK">
+      <HintPath>$(GamePath)\Mods\[CORE]\PyTK\PyTK.dll</HintPath>
+      <Private>false</Private>
+      </Reference>
+    <Reference Include="TMXLoader">
+      <HintPath>$(GamePath)\Mods\[CORE]\TMXLoader\TMXLoader.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>

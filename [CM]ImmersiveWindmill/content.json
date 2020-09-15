@@ -1,0 +1,22 @@
+{
+	"Music": [
+		{
+			"Id": "blueberry.ImmersiveWindmill.windmill_ambient_quiet",
+			"File": "assets/ambient_quiet.wav",
+			"Loop": false,
+			"Preload": false
+		},
+		{
+			"Id": "blueberry.ImmersiveWindmill.windmill_ambient_normal",
+			"File": "assets/ambient_normal.wav",
+			"Loop": false,
+			"Preload": false
+		},
+		{
+			"Id": "blueberry.ImmersiveWindmill.windmill_ambient_loud",
+			"File": "assets/ambient_loud.wav",
+			"Loop": false,
+			"Preload": false
+		}
+	]
+}

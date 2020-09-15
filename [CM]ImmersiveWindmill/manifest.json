@@ -1,0 +1,11 @@
+﻿{
+	"Name": "[CM] Immersive Windmill",
+	"Author": "blueberry",
+	"Version": "1.0.0",
+	"Description": "..?",
+	"UniqueID": "blueberry.CM.ImmersiveWindmill",
+	"MinimumApiVersion": "3.0.0",
+	"UpdateKeys": [ "Nexus:????" ],
+	"ContentPackFor": { "UniqueID": "Platonymous.CustomMusic" },
+	"Dependencies": [ { "UniqueID": "blueberry.ImmersiveWindmill" } ]
+}

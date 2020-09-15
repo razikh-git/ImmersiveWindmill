@@ -1,0 +1,14 @@
+﻿{
+	"world.mill_greatwheel.inspect": "The windshaft higher up turns with the mill's sails, powering this huge assembly.",
+	"world.mill_greatwheel_active.inspect": "The great wheel's turning, and the millstones beneath are churning.",
+	"world.mill_flourbin.inspect": "The flour bin's empty.",
+	"world.mill_flourbin_active.inspect": "It's a bin for collecting flour. Any minute now!",
+	"world.mill_millstone.inspect": "A big pair of grooved stones grind things into powder. Hands off!",
+	"world.mill_millstone_active.inspect": "Looks like the millstones are hard at work on the {{produce}}.",
+	"world.mill_hopper.inspect": "Pour some grain into the hopper, then pull the lever to start milling.",
+	"world.mill_hopper_active.inspect": "Pull the hopper lever to start milling your produce.",
+	"world.mill_conveyor.inspect": "It's a big grain conveyor, connected by a small drive shaft to the ever-turning upright shaft on the next floor up.",
+	"world.mill_conveyor_active.inspect": "There's a conveyor hauling flour up and down the mill.",
+	"world.mill_lever.inspect": "Fill the hopper with produce, then pull the lever to start milling.",
+	"world.mill_lever_active.inspect": "Fill the hopper up and pull the lever again to top-up the mill."
+}

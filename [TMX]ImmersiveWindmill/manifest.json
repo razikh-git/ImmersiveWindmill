@@ -1,0 +1,11 @@
+﻿{
+	"Name": "[TMX] Immersive Windmill",
+	"Author": "blueberry",
+	"Version": "1.0.0",
+	"Description": "..?",
+	"UniqueID": "blueberry.TMX.ImmersiveWindmill",
+	"MinimumApiVersion": "3.0.0",
+	"UpdateKeys": [ "Nexus:????" ],
+	"ContentPackFor": { "UniqueID": "Platonymous.TMXLoader" },
+	"Dependencies": [ { "UniqueID": "blueberry.ImmersiveWindmill" } ]
+}
