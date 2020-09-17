@@ -1,9 +1,23 @@
 {
 	"addMaps": [
 		{
-			"name": "blueberry.ImmersiveWindmill.MillInterior",
-			"file": "assets/MillInterior.tmx",
-			"type": "Custom:ImmersiveWindmill.MillInterior, ImmersiveWindmill, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+			"name": "blueberry.ImmersiveWindmill.MillIndoors",
+			"file": "assets/MillIndoors.tmx",
+			"type": "Custom:ImmersiveWindmill.MillIndoors, ImmersiveWindmill, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+		}
+	],
+	"buildables": [
+		{
+			"id": "blueberry.ImmersiveWindmill.MillBuildable",
+			"name": "MillBuildable",
+			"file": "assets/MillBuildable.tmx",
+			"indoorsFile": "assets/MillIndoors.tmx",
+			"exitTile": [ 0, 2 ],
+			"iconFile": "assets/icon.png",
+			"removeEmpty": false,
+			"price": 6841,
+			"conditions": null,
+			"set:": "Hidden"
 		}
 	]
 }

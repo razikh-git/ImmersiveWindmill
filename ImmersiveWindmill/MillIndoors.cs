@@ -9,19 +9,20 @@ using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Objects;
+
 using TMXLoader;
 
 namespace ImmersiveWindmill
 {
-	public class MillInterior : GameLocation
+	public class MillIndoors : GameLocation
 	{
 		public Mill Mill;
 		//public NetRef<Chest> HopperInput = new NetRef<Chest>();
 		internal static readonly Vector2 HopperPosition = Vector2.Zero;
 
-		public MillInterior() {}
+		public MillIndoors() {}
 
-		public MillInterior(string map, string name)
+		public MillIndoors(string map, string name)
 			: base(map, name)
 		{
 			//NetFields.AddFields(HopperInput);

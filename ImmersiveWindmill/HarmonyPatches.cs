@@ -8,5 +8,10 @@ namespace ImmersiveWindmill
 		{
 
 		}
+
+		public static void Mill_Constructor()
+		{
+
+		}
 	}
 }

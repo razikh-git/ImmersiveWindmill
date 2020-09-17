@@ -21,9 +21,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Remove="assets\coopTiles.png" />
+    <Content Remove="assets\spring_town.png" />
     <Content Remove="assets\townInterior.png" />
     <Content Remove="assets\walls_and_floors.png" />
     <None Remove="assets\coopTiles.png" />
+    <None Remove="assets\spring_town.png" />
     <None Remove="assets\townInterior.png" />
     <None Remove="assets\walls_and_floors.png" />
     <Content Include="content.json">

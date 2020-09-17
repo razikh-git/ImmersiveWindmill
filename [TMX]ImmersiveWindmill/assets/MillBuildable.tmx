@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="2020.01.22" orientation="orthogonal" renderorder="right-down" compressionlevel="0" width="1" height="2" tilewidth="16" tileheight="16" infinite="0" nextlayerid="12" nextobjectid="60">
+ <tileset firstgid="1" name="spring_town" tilewidth="16" tileheight="16" tilecount="2304" columns="32">
+  <image source="spring_town.png" width="512" height="1152"/>
+ </tileset>
+ <layer id="1" name="Back" width="1" height="2">
+  <data encoding="csv">
+0,
+0
+</data>
+ </layer>
+ <objectgroup id="2" name="Back"/>
+ <layer id="3" name="Buildings" width="1" height="2">
+  <data encoding="csv">
+226,
+258
+</data>
+ </layer>
+ <objectgroup id="4" name="Buildings">
+  <object id="59" name="TileData" x="0" y="16" width="16" height="16">
+   <properties>
+    <property name="Action" value="Warp 6 68 INDOORS"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <layer id="8" name="AboveBuildings" width="1" height="2">
+  <properties>
+   <property name="DrawAbove" value="Buildings"/>
+  </properties>
+  <data encoding="csv">
+226,
+258
+</data>
+ </layer>
+ <objectgroup id="9" name="AboveBuildings"/>
+ <layer id="10" name="Front" width="1" height="2">
+  <data encoding="csv">
+226,
+0
+</data>
+ </layer>
+ <objectgroup id="6" name="Front"/>
+ <layer id="5" name="AlwaysFront" width="1" height="2">
+  <data encoding="csv">
+0,
+0
+</data>
+ </layer>
+ <objectgroup id="11" name="AlwaysFront"/>
+</map>
